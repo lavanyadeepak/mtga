@@ -1,0 +1,22 @@
+[
+    {
+        "ZoneId": 1,
+        "ZoneName": "Zone 1"
+    },
+    {
+        "ZoneId": 2,
+        "ZoneName": "Zone 2"
+    },
+    {
+        "ZoneId": 3,
+        "ZoneName": "Zone 3"
+    },
+    {
+        "ZoneId": 4,
+        "ZoneName": "Zone 4"
+    },
+    {
+        "ZoneId": 5,
+        "ZoneName": "Zone 5"
+    }
+]

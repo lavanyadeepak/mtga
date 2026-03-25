@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice of Tambaram - Citizen Initiative</title>
+    <meta name="description"
+        content="Official grievance redressal portal for the Voice of Tambaram citizen initiative. Submit your complaints and track progress.">
+    <link rel="stylesheet" href="./assets/styles/styles.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;600;700&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <header>
+        <div class="logo-container">
+            <img src="./assets/images/tbm.jpg" alt="Tambaram" class="logo-main" id="logo-vot">
+        </div>
+        <div id="google_translate_element"></div>
+    </header>
+
+    <main>
+        <div class="card">
+            <form id="complaintForm">
+                <h3 class="first">Complaint Details</h3>
+
+                <div class="form-group">
+                    <label for="complaintTitle">Complaint Type <span class="required">*</span></label>
+                    <select id="complaintTitle" name="complaintTitle" required>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="complaintIssues">Complaint Subcategory <span class="required">*</span></label>
+                    <select id="complaintIssues" name="complaintIssues" required>
+                        <option value="" disabled selected>Select Complaint Subcategory</option>
+                        <!-- Issues can be dynamically populated based on title -->
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="complaintDescription">Complaint Description <span class="required">*</span></label>
+                    <textarea id="complaintDescription" name="complaintDescription"
+                        placeholder="Please describe your complaint in detail..." required></textarea>
+                </div>
+
+                <div class="divider"></div>
+
+                <h3>Complainant Details</h3>
+
+                <div class="volunteer-check">
+                    <input type="checkbox" id="isVolunteer" name="isVolunteer">
+                    <label for="isVolunteer" style="color: var(--primary-color); margin-bottom: 0;">Willing to Volunteer
+                        during Calamities</label>
+                </div>
+
+                <div class="form-group">
+                    <label for="name">Full Name
+                        <input type="text" id="name" name="name" placeholder="Enter your full name">
+                </div>
+
+                <div class="form-group">
+                    <label for="mobileNumber">Mobile Number </label>
+                    <input type="tel" id="mobileNumber" name="mobileNumber" placeholder="Enter 10-digit mobile number"
+                        maxlength="10" pattern="[0-9]{10}">
+                </div>
+
+                <div class="form-group">
+                    <label for="address">Address</label>
+                    <input type="text" id="address" name="address" placeholder="Residential address" maxlength="150">
+                </div>
+
+                <div class="row">
+                    <div class="col">
+                        <div class="label-row">
+                            <label for="zone">Select Zone</label>
+                            <button style="display: none;" type=" button" class="map-view-btn" id="openMapBtn">
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+                                    <line x1="8" y1="2" x2="8" y2="18"></line>
+                                    <line x1="16" y1="6" x2="16" y2="22"></line>
+                                </svg>
+                                Map View
+                            </button>
+                        </div>
+                        <select id="zone" name="zone">
+                            <option value="">Select Zone</option>
+                            <option value="1">Zone 1</option>
+                            <option value="2">Zone 2</option>
+                            <option value="3">Zone 3</option>
+                            <option value="4">Zone 4</option>
+                            <option value="5">Zone 5</option>
+                        </select>
+                    </div>
+                    <div class="col">
+                        <label for="ward">Select Ward</label>
+                        <select id="ward" name="ward">
+                            <option value="">Select Ward</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="location-wrapper">
+                    <div class="row" style="margin-bottom: 0; flex: 1;">
+                        <div class="col">
+                            <label for="latitude">Latitude</label>
+                            <input type="text" id="latitude" name="latitude" value="12.9247660" disabled>
+                        </div>
+                        <div class="col">
+                            <label for="longitude">Longitude</label>
+                            <input type="text" id="longitude" name="longitude" value="80.1515043" disabled>
+                        </div>
+                    </div>
+                    <button type="button" class="detect-btn" id="detectLocation">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2.2a8 8 0 0 1 8 8c0 7.3-8 11.8-8 11.8z" />
+                            <circle cx="12" cy="10" r="3" />
+                        </svg>
+                        Auto-Detect
+                    </button>
+                </div>
+
+                <div class="map-preview" id="mapPreview">
+                    <div id="leafletMap" style="width: 100%; height: 100%;"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="photo">Upload Photo</label>
+                    <input type="file" id="photo" name="photo" accept="image/*">
+                    <div id="imagePreviewContainer" class="image-preview-container">
+                        <button type="button" id="removeImage" class="remove-image-btn" title="Remove image">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
+                        <img id="imagePreview" src="" alt="Selected image preview">
+                    </div>
+                </div>
+
+                <button type="submit">Submit Complaint</button>
+            </form>
+        </div>
+
+        <aside class="map-sidebar">
+            <h3>Tambaram Ward Map</h3>
+            <div class="map-sidebar-content">
+                <img src="assets/database/maps/tbm_map.svg" alt="Tambaram Ward Map" class="sidebar-map-img"
+                    id="sidebarMap">
+                <p class="small-text">Quickly ascertain your Ward and Zone from the map above. Click to view full map.
+                </p>
+                <div class="map-links">
+                    <a href="assets/database/maps/tbm_map.pdf" target="_blank" class="map-link-btn">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                        Download PDF Map
+                    </a>
+                </div>
+            </div>
+        </aside>
+    </main>
+
+    <!-- Post Preview Modal -->
+    <div class="modal-overlay" id="previewModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Post Preview</h3>
+                <p class="small-text">Preview your complaint for social media sharing.</p>
+            </div>
+            <div class="post-preview-box">
+                <div id="postText"></div>
+                <img id="postImagePreview" class="post-preview-image" src="" alt="Compliant image">
+            </div>
+            <div class="modal-footer">
+                <div>
+                    <button class="btn-secondary" id="copyBtn">Copy to Clipboard</button>
+                    <div class="copy-success" id="copyMsg">Copied!</div>
+                </div>
+                <button class="btn-primary" id="nextToPrivacy">Proceed to Submit</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Privacy Confirmation Modal -->
+    <div class="modal-overlay" id="privacyModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Data Security Confirmation</h3>
+            </div>
+            <p style="margin-bottom: 1.5rem; font-size: 0.95rem;">
+                Your personal details (Name, Mobile, and Volunteer status) will be securely saved and shared with
+                relevant NGOs to assist in redressal and calamity support.
+            </p>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="cancelPrivacy">Cancel</button>
+                <button class="btn-primary" id="confirmPrivacy">Confirm & Submit via Arattai</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden Template for Social Media Image Generation -->
+    <div id="postTemplate" class="social-card-template">
+        <div class="sc-header">
+            <span class="sc-emoji">🏙️</span>
+            <div class="sc-title-group">
+                <h2 class="sc-main-title">Make Tambaram Great Again</h2>
+                <div class="sc-divider-line"></div>
+            </div>
+        </div>
+
+        <div class="sc-content">
+            <div class="sc-info-row">
+                <span class="sc-label">📋 Complaint Type</span>
+                <span class="sc-value" id="tpl-type">...</span>
+            </div>
+            <div class="sc-info-row sub">
+                <span class="sc-label">Subcategory</span>
+                <span class="sc-value" id="tpl-subtype">...</span>
+            </div>
+            <div class="sc-info-row">
+                <span class="sc-label">Zone</span>
+                <span class="sc-value" id="tpl-zone">...</span>
+            </div>
+            <div class="sc-info-row">
+                <span class="sc-label">Ward</span>
+                <span class="sc-value" id="tpl-ward">...</span>
+            </div>
+
+            <div class="sc-section-title">
+                <span class="sc-emoji">📝</span> Description:
+            </div>
+            <p class="sc-description" id="tpl-desc">...</p>
+
+            <div class="sc-section-title">
+                <span class="sc-emoji">📍</span> Location: <span id="tpl-latlng">...</span>
+            </div>
+            <div class="sc-map-snapshot" id="tpl-map">
+                <!-- Static map image will be injected here -->
+                <img id="tpl-static-map" src="" alt="Map Snapshot">
+            </div>
+
+            <div class="sc-metadata">
+                <div class="sc-meta-item">
+                    <span class="sc-emoji">🔒</span> Filed from: <span id="tpl-ip">...</span>
+                </div>
+                <div class="sc-meta-item indent">
+                    via: <span id="tpl-proxy">...</span>
+                </div>
+                <div class="sc-meta-item">
+                    On: <span id="tpl-date">...</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="sc-footer">
+            <div class="sc-hashtags">
+                #MTGA #TambaramCorp #CitizenInitiative
+            </div>
+            <div class="sc-bottom-line"></div>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        function googleTranslateElementInit() {
+            new google.translate.TranslateElement({
+                pageLanguage: 'en',
+                includedLanguages: 'en,ta',
+                layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+                autoDisplay: false
+            }, 'google_translate_element');
+        }
+
+        function triggerTranslation(lang) {
+            const select = document.querySelector('.goog-te-combo');
+            if (select) {
+                select.value = lang;
+                select.dispatchEvent(new Event('change'));
+            }
+        }
+    </script>
+    <!-- Interactive Map Modal -->
+    <div class="modal-overlay" id="mapModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="label-row" style="width: 100%;">
+                    <h3>Tambaram Map Selection</h3>
+                    <button class="map-view-btn" id="closeMapBtn" style="margin-left: auto;">Close Map</button>
+                </div>
+                <p class="small-text">Click on a ward to automatically select Zone and Ward.</p>
+            </div>
+            <div class="map-container" id="svgContainer">
+                <!-- SVG will be loaded here via JS -->
+                <p style="padding: 2rem; text-align: center;">Loading interactive map...</p>
+            </div>
+            <div class="modal-footer"
+                style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <p id="selectionHint" class="small-text" style="margin-right: auto; align-self: center;">No ward
+                    selected</p>
+                <button class="btn-primary" id="confirmMapBtn" disabled>Confirm Selection</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript"
+        src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <script>
+
+        // Geolocation & Leaflet Map Logic
+        const detectBtn = document.getElementById('detectLocation');
+        const latInput = document.getElementById('latitude');
+        const lngInput = document.getElementById('longitude');
+
+        // Initial coordinates (Tambaram)
+        const initialLat = 12.9247660;
+        const initialLng = 80.1515043;
+
+        // Initialize Leaflet Map
+        const map = L.map('leafletMap').setView([initialLat, initialLng], 15);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // Marker for location
+        const marker = L.marker([initialLat, initialLng], {
+            draggable: true
+        }).addTo(map);
+
+        // Update inputs when marker is dragged
+        marker.on('dragend', function (event) {
+            const position = marker.getLatLng();
+            latInput.value = position.lat.toFixed(7);
+            lngInput.value = position.lng.toFixed(7);
+        });
+
+        function updateMap(lat, lng) {
+            marker.setLatLng([lat, lng]);
+            map.setView([lat, lng], 15);
+        }
+
+        detectBtn.addEventListener('click', () => {
+            if (!navigator.geolocation) {
+                alert('Geolocation is not supported by your browser');
+                return;
+            }
+
+            detectBtn.disabled = true;
+            detectBtn.textContent = 'Detecting...';
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const lat = position.coords.latitude.toFixed(7);
+                    const lng = position.coords.longitude.toFixed(7);
+                    latInput.value = lat;
+                    lngInput.value = lng;
+                    updateMap(lat, lng);
+                    detectBtn.disabled = false;
+                    detectBtn.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2.2a8 8 0 0 1 8 8c0 7.3-8 11.8-8 11.8z"/><circle cx="12" cy="10" r="3"/></svg> Auto-Detect';
+                },
+                (error) => {
+                    console.error('Geolocation error:', error);
+                    alert('Unable to fetch your location. Please check your permissions.');
+                    detectBtn.disabled = false;
+                    detectBtn.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2.2a8 8 0 0 1 8 8c0 7.3-8 11.8-8 11.8z"/><circle cx="12" cy="10" r="3"/></svg> Auto-Detect';
+                }
+            );
+        });
+
+        // Dynamic data loading
+        const titleSelect = document.getElementById('complaintTitle');
+        const issueSelect = document.getElementById('complaintIssues');
+        const zoneSelect = document.getElementById('zone');
+        const wardSelect = document.getElementById('ward');
+
+        // Cache for complaint data
+        let complaintData = {
+            types: [],
+            subtypes: [],
+            zones: [],
+            wards: []
+        };
+
+        async function loadComplaintData() {
+            try {
+                // Fetch all JSON files in parallel
+                const [typesRes, subtypesRes, zonesRes, wardsRes] = await Promise.all([
+                    fetch('assets/database/mappers/complainttypes.json'),
+                    fetch('assets/database/mappers/complaintsubtypes.json'),
+                    fetch('assets/database/mappers/Zone.json'),
+                    fetch('assets/database/mappers/Ward.json')
+                ]);
+
+                if (!typesRes.ok || !subtypesRes.ok || !zonesRes.ok || !wardsRes.ok)
+                    throw new Error('Failed to load JSON data');
+
+                const types = await typesRes.json();
+                const subtypes = await subtypesRes.json();
+                const zones = await zonesRes.json();
+                const wards = await wardsRes.json();
+
+                complaintData = { types, subtypes, zones, wards };
+                populateTypes();
+                populateZones();
+            } catch (err) {
+                console.error('Error loading data:', err);
+                // Fallback preserved for safety
+                complaintData = {
+                    types: [{ SNo: 1, ComplaintType: 'Street light' }],
+                    subtypes: [{ SNo: 101, ComplaintTypeId: 1, ComplaintSubType: 'Not glowing' }],
+                    zones: [{ ZoneId: 1, ZoneName: 'Zone 1' }],
+                    wards: [{ WardId: 1, WardName: 'Ward 1', ZoneId: 1 }]
+                };
+                populateTypes();
+                populateZones();
+            }
+        }
+
+        function populateTypes() {
+            titleSelect.innerHTML = '<option value="" disabled selected>Select Complaint Type</option>';
+            complaintData.types.forEach(type => {
+                if (type.Active === 1 || type.Active === undefined) {
+                    const opt = document.createElement('option');
+                    opt.value = type.SNo;
+                    opt.textContent = type.ComplaintType;
+                    titleSelect.appendChild(opt);
+                }
+            });
+        }
+
+        function populateZones() {
+            zoneSelect.innerHTML = '<option value="">Select Zone</option>';
+            complaintData.zones.forEach(zone => {
+                const opt = document.createElement('option');
+                opt.value = zone.ZoneId;
+                opt.textContent = zone.ZoneName;
+                zoneSelect.appendChild(opt);
+            });
+        }
+
+        zoneSelect.addEventListener('change', (e) => {
+            const selectedZoneId = e.target.value;
+            wardSelect.innerHTML = '<option value="">Select Ward</option>';
+
+            const filteredWards = complaintData.wards.filter(ward =>
+                String(ward.ZoneId) === String(selectedZoneId)
+            );
+
+            filteredWards.forEach(ward => {
+                const opt = document.createElement('option');
+                opt.value = ward.WardId;
+                opt.textContent = ward.WardName;
+                wardSelect.appendChild(opt);
+            });
+        });
+
+        titleSelect.addEventListener('change', (e) => {
+            const selectedTypeId = e.target.value;
+            issueSelect.innerHTML = '<option value="" disabled selected>Select Complaint Subcategory</option>';
+
+            const filteredSubtypes = complaintData.subtypes.filter(st =>
+                String(st.ComplaintTypeId) === String(selectedTypeId)
+            );
+
+            filteredSubtypes.forEach(subtype => {
+                const opt = document.createElement('option');
+                opt.value = subtype.SNo;
+                opt.textContent = subtype.ComplaintSubType;
+                issueSelect.appendChild(opt);
+            });
+        });
+
+        // Initialize loading
+        loadComplaintData();
+
+        // Submission & Modal Logic
+        const form = document.getElementById('complaintForm');
+        const previewModal = document.getElementById('previewModal');
+        const privacyModal = document.getElementById('privacyModal');
+        const postTextDiv = document.getElementById('postText');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const submitBtn = form.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Generating Preview...';
+
+            const typeText = titleSelect.options[titleSelect.selectedIndex].text;
+            const issueText = issueSelect.options[issueSelect.selectedIndex].text;
+            const zoneText = zoneSelect.options[zoneSelect.selectedIndex]?.text || 'N/A';
+            const wardText = wardSelect.options[wardSelect.selectedIndex]?.text || 'N/A';
+            const desc = document.getElementById('complaintDescription').value;
+            const lat = latInput.value;
+            const lng = lngInput.value;
+
+            // Update Template
+            document.getElementById('tpl-type').textContent = typeText;
+            document.getElementById('tpl-subtype').textContent = issueText;
+            document.getElementById('tpl-zone').textContent = zoneText;
+            document.getElementById('tpl-ward').textContent = wardText;
+            document.getElementById('tpl-desc').textContent = desc;
+            document.getElementById('tpl-latlng').textContent = `${lat}, ${lng}`;
+            document.getElementById('tpl-date').textContent = new Date().toLocaleString('en-IN', { 
+                day: '2-digit', month: 'short', year: 'numeric', 
+                hour: '2-digit', minute: '2-digit', hour12: false 
+            }) + ' IST';
+
+            // Fetch IP
+            try {
+                const ipRes = await fetch('https://api.ipify.org?format=json');
+                const ipData = await ipRes.json();
+                document.getElementById('tpl-ip').textContent = ipData.ip;
+                document.getElementById('tpl-proxy').textContent = 'Direct Connection';
+            } catch (err) {
+                document.getElementById('tpl-ip').textContent = '103.x.x.x';
+                document.getElementById('tpl-proxy').textContent = '182.x.x.x (proxy)';
+            }
+
+            // Static Map Snapshot (Using OSM Static Maps API via public service or just a nice placeholder)
+            // Using a reliable public static map service for OSM
+            const staticMapUrl = `https://static-maps.yandex.ru/1.x/?ll=${lng},${lat}&z=14&l=map&size=450,300`;
+            document.getElementById('tpl-static-map').src = staticMapUrl;
+
+            // Wait for images in template to load
+            await new Promise(resolve => {
+                const img = document.getElementById('tpl-static-map');
+                if (img.complete) resolve();
+                else img.onload = resolve;
+            });
+
+            // Generate Image
+            const template = document.getElementById('postTemplate');
+            const canvas = await html2canvas(template, {
+                useCORS: true,
+                scale: 2 // Higher quality
+            });
+
+            const imageData = canvas.toDataURL('image/png');
+            postImgPreview.src = imageData;
+            postImgPreview.style.display = 'block';
+            postTextDiv.style.display = 'none'; // Hide text version
+
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Submit Complaint';
+            previewModal.style.display = 'flex';
+        });
+
+        // Copy to Clipboard (Image)
+        document.getElementById('copyBtn').addEventListener('click', async () => {
+            try {
+                const response = await fetch(postImgPreview.src);
+                const blob = await response.blob();
+                await navigator.clipboard.write([
+                    new ClipboardItem({
+                        [blob.type]: blob
+                    })
+                ]);
+                const msg = document.getElementById('copyMsg');
+                msg.textContent = 'Image Copied!';
+                msg.style.display = 'block';
+                setTimeout(() => msg.style.display = 'none', 2000);
+            } catch (err) {
+                console.error('Copy failed:', err);
+                alert('Copy failed. Please right-click the image to copy/save.');
+            }
+        });
+
+        // Toggle Modals
+        document.getElementById('nextToPrivacy').addEventListener('click', () => {
+            previewModal.style.display = 'none';
+            privacyModal.style.display = 'flex';
+        });
+
+        document.getElementById('cancelPrivacy').addEventListener('click', () => {
+            privacyModal.style.display = 'none';
+        });
+
+        document.getElementById('confirmPrivacy').addEventListener('click', () => {
+            const name = document.getElementById('name').value;
+            const mobile = document.getElementById('mobileNumber').value;
+            const isVolunteer = document.getElementById('isVolunteer').checked ? 'Yes' : 'No';
+            const zoneText = zoneSelect.options[zoneSelect.selectedIndex]?.text || 'N/A';
+            const wardText = wardSelect.options[wardSelect.selectedIndex]?.text || 'N/A';
+
+            // Arattai Web Link (Hypothetical Direct Message format)
+            const arattaiData = encodeURIComponent(`Volunteer/Complainant Data: Name: ${name}, Mobile: ${mobile}, Willing to Volunteer: ${isVolunteer}, Zone: ${zoneText}, Ward: ${wardText}`);
+            const arattaiUrl = `https://web.arattai.in/?text=${arattaiData}`;
+
+            window.open(arattaiUrl, '_blank');
+
+            alert('Your complaint has been processed. Opening Arattai for data transmission...');
+            privacyModal.style.display = 'none';
+            form.reset();
+            updateMap('12.9247660', '80.1515043'); // Reset map
+        });
+
+        // Sidebar Map Click to Enlarge
+        document.getElementById('sidebarMap').addEventListener('click', () => {
+            window.open('assets/database/maps/tbm_map.svg', '_blank');
+        });
+
+        // Image Preview Logic
+        const photoInput = document.getElementById('photo');
+        const imgPreviewContainer = document.getElementById('imagePreviewContainer');
+        const imgPreview = document.getElementById('imagePreview');
+        const removeImgBtn = document.getElementById('removeImage');
+        const postImgPreview = document.getElementById('postImagePreview');
+
+        let currentImageData = null;
+
+        photoInput.addEventListener('change', function () {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    currentImageData = e.target.result;
+                    imgPreview.src = currentImageData;
+                    imgPreviewContainer.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        removeImgBtn.addEventListener('click', function () {
+            photoInput.value = '';
+            imgPreview.src = '';
+            imgPreviewContainer.style.display = 'none';
+            currentImageData = null;
+        });
+    </script>
+</body>
+
+</html>

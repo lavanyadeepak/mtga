@@ -1,0 +1,87 @@
+[
+    {
+        "Active": 1,
+        "ComplaintType": "Flood / Natural Disaster",
+        "SNo": 1
+    },
+    {
+        "Active": 1,
+        "ComplaintType": "Waste dumped (GVP)",
+        "SNo": 6
+    },
+    {
+        "Active": 1,
+        "ComplaintType": "Waste not collected",
+        "SNo": 7
+    },
+    {
+        "Active": 1,
+        "ComplaintType": "Street not sweeped",
+        "SNo": 8
+    },
+    {
+        "Active": 1,
+        "ComplaintType": "Tree and Green waste",
+        "SNo": 9
+    },
+    {
+        "Active": 1,
+        "ComplaintType": "Drain/UGD",
+        "SNo": 10
+    },
+    {
+        "Active": 1,
+        "ComplaintType": "Mosquito Menace",
+        "SNo": 11
+    },
+    {
+        "Active": 1,
+        "ComplaintType": "Park Cleaning",
+        "SNo": 12
+    },
+    {
+        "Active": 1,
+        "ComplaintType": "Road",
+        "SNo": 13
+    },
+    {
+        "Active": 1,
+        "ComplaintType": "Water supply",
+        "SNo": 14
+    },
+    {
+        "Active": 1,
+        "ComplaintType": "Culvert",
+        "SNo": 15
+    },
+    {
+        "Active": 1,
+        "ComplaintType": "High mass light",
+        "SNo": 16
+    },
+    {
+        "Active": 1,
+        "ComplaintType": "Street light",
+        "SNo": 17
+    },
+    {
+        "Active": 1,
+        "ComplaintType": "Town planning",
+        "SNo": 18
+    },
+    {
+        "Active": 1,
+        "ComplaintType": "Revenue",
+        "SNo": 19
+    },
+    {
+        "Active": 1,
+        "ComplaintType": "Others",
+        "SNo": 20
+    },
+    {
+        "Active": 1,
+        "ComplaintType": "Workforce Complaints",
+        "SNo": 21
+    }
+]

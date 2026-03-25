@@ -9,6 +9,7 @@
         content="Official grievance redressal portal for the Voice of Tambaram citizen initiative. Submit your complaints and track progress.">
     <link rel="stylesheet" href="./assets/styles/styles.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="./assets/scripts/config.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -151,7 +152,7 @@
         </div>
 
         <aside class="map-sidebar">
-            <h3>Tambaram Ward Map</h3>
+            <h3 id="sidebar-title">Tambaram Ward Map</h3>
             <div class="map-sidebar-content">
                 <img src="assets/database/maps/tbm_map.svg" alt="Tambaram Ward Map" class="sidebar-map-img"
                     id="sidebarMap">
@@ -187,7 +188,8 @@
             </div>
             <div class="modal-footer">
                 <div>
-                    <button class="btn-secondary" id="copyBtn">Copy to Clipboard</button>
+                    <button class="btn-secondary" id="copyBtn">Copy Image</button>
+                    <button class="btn-secondary" id="copyTextBtn">Copy Text</button>
                     <div class="copy-success" id="copyMsg">Copied!</div>
                 </div>
                 <button class="btn-primary" id="nextToPrivacy">Proceed to Submit</button>
@@ -217,7 +219,7 @@
         <div class="sc-header">
             <span class="sc-emoji">🏙️</span>
             <div class="sc-title-group">
-                <h2 class="sc-main-title">Make Tambaram Great Again</h2>
+                <h2 class="sc-main-title" id="tpl-slogan">Make Tambaram Great Again</h2>
                 <div class="sc-divider-line"></div>
             </div>
         </div>
@@ -267,7 +269,7 @@
         </div>
 
         <div class="sc-footer">
-            <div class="sc-hashtags">
+            <div class="sc-hashtags" id="tpl-hashtags">
                 #MTGA #TambaramCorp #CitizenInitiative
             </div>
             <div class="sc-bottom-line"></div>
@@ -278,7 +280,7 @@
         function googleTranslateElementInit() {
             new google.translate.TranslateElement({
                 pageLanguage: 'en',
-                includedLanguages: 'en,ta',
+                includedLanguages: CONFIG.languages.join(','),
                 layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
                 autoDisplay: false
             }, 'google_translate_element');
@@ -297,7 +299,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <div class="label-row" style="width: 100%;">
-                    <h3>Tambaram Map Selection</h3>
+                    <h3 id="map-modal-title">Tambaram Map Selection</h3>
                     <button class="map-view-btn" id="closeMapBtn" style="margin-left: auto;">Close Map</button>
                 </div>
                 <p class="small-text">Click on a ward to automatically select Zone and Ward.</p>
@@ -328,8 +330,8 @@
         const lngInput = document.getElementById('longitude');
 
         // Initial coordinates (Tambaram)
-        const initialLat = 12.9247660;
-        const initialLng = 80.1515043;
+        const initialLat = CONFIG.defaultLat;
+        const initialLng = CONFIG.defaultLng;
 
         // Initialize Leaflet Map
         const map = L.map('leafletMap').setView([initialLat, initialLng], 15);
@@ -397,6 +399,35 @@
             wards: []
         };
 
+        function applyConfig() {
+            document.title = `Voice of ${CONFIG.city} - Citizen Initiative`;
+            const metaDesc = document.querySelector('meta[name="description"]');
+            if (metaDesc) metaDesc.content = `Official grievance redressal portal for the Voice of ${CONFIG.city} citizen initiative. Submit your complaints and track progress.`;
+            
+            document.getElementById('logo-vot').alt = CONFIG.city;
+            document.getElementById('sidebar-title').textContent = `${CONFIG.city} Ward Map`;
+            document.getElementById('map-modal-title').textContent = `${CONFIG.city} Map Selection`;
+            document.getElementById('tpl-slogan').textContent = CONFIG.slogan;
+
+            const allTags = [
+                ...(CONFIG.hashtags || []),
+                ...(CONFIG.socialTags || []),
+                ...(CONFIG.viralTags || [])
+            ].join(' ');
+            document.getElementById('tpl-hashtags').textContent = allTags;
+
+            // Update map assets from config
+            const sidebarMap = document.getElementById('sidebarMap');
+            if (sidebarMap && CONFIG.mapSvg) {
+                sidebarMap.src = CONFIG.mapSvg;
+                sidebarMap.alt = `${CONFIG.city} Ward Map`;
+            }
+            const pdfLink = document.querySelector('.map-link-btn');
+            if (pdfLink && CONFIG.mapPdf) {
+                pdfLink.href = CONFIG.mapPdf;
+            }
+        }
+
         async function loadComplaintData() {
             try {
                 // Fetch all JSON files in parallel
@@ -412,10 +443,24 @@
 
                 const types = await typesRes.json();
                 const subtypes = await subtypesRes.json();
-                const zones = await zonesRes.json();
-                const wards = await wardsRes.json();
+                
+                let zones, wards;
+                if (CONFIG.zones && CONFIG.zones.length > 0) {
+                    zones = CONFIG.zones;
+                } else {
+                    zones = await zonesRes.json();
+                }
+
+                if (CONFIG.wards && CONFIG.wards.length > 0) {
+                    wards = CONFIG.wards;
+                } else {
+                    wards = await wardsRes.json();
+                }
 
                 complaintData = { types, subtypes, zones, wards };
+                
+                applyConfig();
+                
                 populateTypes();
                 populateZones();
             } catch (err) {
@@ -427,6 +472,7 @@
                     zones: [{ ZoneId: 1, ZoneName: 'Zone 1' }],
                     wards: [{ WardId: 1, WardName: 'Ward 1', ZoneId: 1 }]
                 };
+                applyConfig();
                 populateTypes();
                 populateZones();
             }
@@ -494,6 +540,8 @@
         const previewModal = document.getElementById('previewModal');
         const privacyModal = document.getElementById('privacyModal');
         const postTextDiv = document.getElementById('postText');
+        let generatedTextSummary = '';
+
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
 
@@ -544,6 +592,25 @@
                 else img.onload = resolve;
             });
 
+            // Generate Plain Text Summary
+            const allTags = [
+                ...(CONFIG.hashtags || []),
+                ...(CONFIG.socialTags || []),
+                ...(CONFIG.viralTags || [])
+            ].join(' ');
+
+            generatedTextSummary = `🚨 *NEW COMPLAINT: ${typeText}*\n` +
+                `📌 *Subcategory:* ${issueText}\n` +
+                `🏙️ *Zone:* ${zoneText} | *Ward:* ${wardText}\n` +
+                `📝 *Description:* ${desc}\n` +
+                `📍 *Location:* https://www.google.com/maps?q=${lat},${lng}\n` +
+                `📅 *Date:* ${document.getElementById('tpl-date').textContent}\n\n` +
+                `${allTags}`.trim();
+
+            postTextDiv.textContent = generatedTextSummary;
+            postTextDiv.style.display = 'block';
+            postTextDiv.style.marginBottom = '1.5rem';
+
             // Generate Image
             const template = document.getElementById('postTemplate');
             const canvas = await html2canvas(template, {
@@ -554,7 +621,6 @@
             const imageData = canvas.toDataURL('image/png');
             postImgPreview.src = imageData;
             postImgPreview.style.display = 'block';
-            postTextDiv.style.display = 'none'; // Hide text version
 
             submitBtn.disabled = false;
             submitBtn.textContent = 'Submit Complaint';
@@ -578,6 +644,20 @@
             } catch (err) {
                 console.error('Copy failed:', err);
                 alert('Copy failed. Please right-click the image to copy/save.');
+            }
+        });
+
+        // Copy Plain Text to Clipboard
+        document.getElementById('copyTextBtn').addEventListener('click', async () => {
+            try {
+                await navigator.clipboard.writeText(generatedTextSummary);
+                const msg = document.getElementById('copyMsg');
+                msg.textContent = 'Text Copied!';
+                msg.style.display = 'block';
+                setTimeout(() => msg.style.display = 'none', 2000);
+            } catch (err) {
+                console.error('Text copy failed:', err);
+                alert('Failed to copy text.');
             }
         });
 
@@ -607,12 +687,12 @@
             alert('Your complaint has been processed. Opening Arattai for data transmission...');
             privacyModal.style.display = 'none';
             form.reset();
-            updateMap('12.9247660', '80.1515043'); // Reset map
+            updateMap(CONFIG.defaultLat, CONFIG.defaultLng); // Reset map
         });
 
         // Sidebar Map Click to Enlarge
         document.getElementById('sidebarMap').addEventListener('click', () => {
-            window.open('assets/database/maps/tbm_map.svg', '_blank');
+            window.open(CONFIG.mapSvg || 'assets/database/maps/tbm_map.svg', '_blank');
         });
 
         // Image Preview Logic

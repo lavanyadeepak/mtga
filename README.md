@@ -9,5 +9,4 @@ Indian municipal corporations.
 - Social-shareable complaint cards with IP stamping
 - Bilingual out of the box (English + regional language)
 - Ward map integrated
-- No animal complaint categories (by design)
 - #MTGA ready 😄
